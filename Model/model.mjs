@@ -30,8 +30,9 @@ class Block {
 }
 
 class Actor extends Block {
-    constructor(position, velocity, size, sign, color) {
+    constructor(position, velocity, size, sign, color, direction) {
         super(position, velocity, size, sign, color)
+        this.direction = direction
     }
 
     fall(gravity, time, velocity) {
@@ -49,9 +50,15 @@ class Coin extends Block {
 
     wobble(time) {
         this.position.y += this.velocity.y * this.direction * time
+
+        const lowerBorder = this.basePosition.y + 1,
+        upperBorder = this.basePosition.y - 1
         
-        if (this.position.y + this.size.y < this.basePosition.y + 1 && 
-            this.position.y > this.basePosition.y - 1) return 
+        if (this.position.y + this.size.y < lowerBorder && 
+            this.position.y > upperBorder) return 
+        
+        if (this.position.y < upperBorder) this.position.y = upperBorder
+        else this.position.y = lowerBorder - this.size.y
         
         this.direction *= -1 
     }
@@ -59,16 +66,21 @@ class Coin extends Block {
 
 class Lava extends Actor {
     constructor(position, velocity, sign) {
-        super(Object.create(position), velocity, new Vector(1, 1), sign, new RGB(255, 69, 0))
+        super(Object.create(position), velocity, new Vector(1, 1), sign, new RGB(255, 69, 0), randomDirection())
         this.basePosition = Object.create(position)
-        this.direction = randomDirection()
     }
 
     moveSideward(time) {
         this.position.x += this.velocity.x * this.direction * time
+
+        const rightBorder = this.basePosition.x + 1.5,
+        leftBorder = this.basePosition.x - 1.5
         
-        if (this.position.x + this.size.x < this.basePosition.x + 1.5 &&
-            this.position.x > this.basePosition.x - 1.5) return
+        if (this.position.x + this.size.x < rightBorder &&
+            this.position.x > leftBorder) return
+        
+        if (this.position.x < leftBorder) this.position.x = leftBorder
+        else this.position.x = rightBorder - this.size.x
         
         this.direction *= -1
     }
@@ -76,12 +88,11 @@ class Lava extends Actor {
 
 class Player extends Actor {
     constructor(position, velocity) {
-        super(position, velocity, new Vector(1, 2), "@", new RGB(0, 0, 255))
+        super(position, velocity, new Vector(1, 2), "@", new RGB(0, 0, 255), 0)
         this.isJumping = false
         this.isFalling = false
         this.jumpVelocity = Object.create(this.velocity)
         this.health = 3
-        this.direction = 0
     }
 
     move(direction, time) {
@@ -295,7 +306,7 @@ export default class World {
             if (this.isOutside(fallenLava) || this.collisionsBlock(fallenLava)) fallenLava.position = fallenLava.basePosition
         }
     }
-    
+
     anyLavahitsPlayer() {
         for (const lava of this.lava) {
             let player = this.level.player

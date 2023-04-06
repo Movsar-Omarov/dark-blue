@@ -20,7 +20,7 @@ export default class Controller {
         // console.log(this.keys)
         if (this.state != "playing") return
         
-        let timeStep = Math.min(time - this.lastTime, 1000) / 1000,
+        let timeStep = (time - this.lastTime) / 1000,
         result = this.model.update(this.keys, timeStep)
         
         this.view.render(this.model.level)
