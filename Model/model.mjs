@@ -50,8 +50,10 @@ class Coin extends Block {
     wobble(time) {
         this.position.y += this.velocity.y * this.direction * time
         
-        if (this.position.y + this.size.y >= this.basePosition.y + 1 || 
-            this.position.y <= this.basePosition.y - 1) this.direction *= -1 
+        if (this.position.y + this.size.y < this.basePosition.y + 1 && 
+            this.position.y > this.basePosition.y - 1) return 
+        
+        this.direction *= -1 
     }
 }
 
@@ -65,8 +67,10 @@ class Lava extends Actor {
     moveSideward(time) {
         this.position.x += this.velocity.x * this.direction * time
         
-        if (this.position.x + this.size.x >= this.basePosition.x + 1.5 ||
-            this.position.x <= this.basePosition.x - 1.5) this.direction *= -1
+        if (this.position.x + this.size.x < this.basePosition.x + 1.5 &&
+            this.position.x > this.basePosition.x - 1.5) return
+        
+        this.direction *= -1
     }
 }
 
@@ -184,6 +188,10 @@ export default class World {
         return this.levels[this.currentLevel]
     }
 
+    get lava() {
+        return this.level.lava
+    }
+
     static getLevel(plan) {
         return new Level(plan)
     }
@@ -245,15 +253,11 @@ export default class World {
     updateRun(keys, time) {
         const player = this.level.player
 
-        // update left motion
-       
         if (keys["ArrowLeft"]) {
             player.move("left", time)
 
             if (this.isOutside(player) || this.collisionsBlock(player)) player.move("right", time)
         }
-
-        // update right motion
 
         if (keys["ArrowRight"]) {
             player.move("right", time)
@@ -274,28 +278,26 @@ export default class World {
         this.updateJump(keys, time)
     }
 
-    updateLava(time) {
-        // update lava bubbles
-        
-        const bubbles = this.level.lava.filter(lava => lava.sign === "=")
+    updateLavaBubbles(time) {
+        const bubbles = this.lava.filter(lava => lava.sign === "=")
        
         for (const bubble of bubbles) {
             bubble.moveSideward(time)
         }
+    }
 
-        // update fallen lavas
-
-        const fallenLavas = this.level.lava.filter(lava => lava.sign === "|")
+    updateFallenLavas(time) {
+        const fallenLavas = this.lava.filter(lava => lava.sign === "|")
         
         for (const fallenLava of fallenLavas) {
             fallenLava.fall(this.gravity, time, fallenLava.velocity)
 
             if (this.isOutside(fallenLava) || this.collisionsBlock(fallenLava)) fallenLava.position = fallenLava.basePosition
         }
-        
-        // check if any lava hit player
-        
-        for (const lava of this.level.lava) {
+    }
+    
+    anyLavahitsPlayer() {
+        for (const lava of this.lava) {
             let player = this.level.player
             
             if (this.collisions(player, lava)) player.health--
@@ -304,6 +306,13 @@ export default class World {
         }
        
         return false
+    }
+
+    updateLava(time) {
+        this.updateLavaBubbles(time)
+        this.updateFallenLavas(time)
+
+        return this.anyLavahitsPlayer()
     }
 
     updateCoins(time) {

@@ -15,6 +15,7 @@ export default class Controller {
         this.state = "playing"
         this.loop()
     }
+
     loop(time = 0) {
         // console.log(this.keys)
         if (this.state != "playing") return
@@ -29,7 +30,7 @@ export default class Controller {
 
         this.lastTime = time
         
-        requestAnimationFrame(time => this.loop(time));
+        requestAnimationFrame(time => this.loop(time))
     }
     
     nextLevel() {

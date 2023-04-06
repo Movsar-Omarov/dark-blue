@@ -34,7 +34,6 @@ window.addEventListener("keyup", e => {
 function runMatch() {
     return new Promise(resolve => {
         controller.start()
-
         resolve(controller.state)
     })
 }
@@ -47,8 +46,9 @@ async function runGame() {
         catch(e) {
             break
         }
-
-        if (result == "win") controller.nextLevel()
+        console.log(result)
+        if (result === "win") controller.nextLevel()
+        else if (result === "lose") break
     }
 }
 
