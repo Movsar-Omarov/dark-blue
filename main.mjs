@@ -1,20 +1,10 @@
 import Controller from "./Controller/controller.mjs"
 import World from "./Model/model.mjs"
 import Display from "./View/view.mjs"
+import levelPlans from "./levels.js"
 
 const canvas = document.getElementById("display")
-let levels = [
-    `
-    ......................
-    ..#................#..
-    ..#..............=.#..
-    ..#.........o.o....#..
-    ..#.@......#####...#..
-    ..#####............#..
-    ......#++++++++++++#..
-    ......##############..
-    ......................`
-]
+let levels = levelPlans
 
 levels = levels.map(level => World.getLevel(level))
 
