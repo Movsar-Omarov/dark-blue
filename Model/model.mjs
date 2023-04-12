@@ -51,6 +51,8 @@ class Coin extends Block {
     wobble(time) {
         this.position.y += this.velocity.y * this.direction * time
 
+        // check if coin goes over borders
+
         const lowerBorder = this.basePosition.y + 1,
         upperBorder = this.basePosition.y - 1
         
@@ -66,15 +68,18 @@ class Coin extends Block {
 
 class Lava extends Actor {
     constructor(position, velocity, sign) {
-        super(Object.create(position), velocity, new Vector(1, 1), sign, new RGB(255, 69, 0), randomDirection())
+        super(Object.create(position), Object.create(velocity), new Vector(1, 1), sign, new RGB(255, 69, 0), randomDirection())
         this.basePosition = Object.create(position)
+        this.baseVelocity = Object.create(velocity)
     }
 
     moveSideward(time) {
         this.position.x += this.velocity.x * this.direction * time
 
-        const rightBorder = this.basePosition.x + 1.5,
-        leftBorder = this.basePosition.x - 1.5
+        // check if lava goes over borders
+
+        const rightBorder = this.basePosition.x + 2,
+        leftBorder = this.basePosition.x - 2
         
         if (this.position.x + this.size.x < rightBorder &&
             this.position.x > leftBorder) return
@@ -144,9 +149,9 @@ function createMobileChars(level) {
 
             switch(actor) {
                 case "+":
-                    level.push(new Lava(position, 0, actor))
+                    level.push(new Lava(position, null, actor))
                     break
-                case "|":
+                case "v":
                     level.push(new Lava(position, new Vector(0, 2), actor))
                     break
                 case "=":
@@ -156,7 +161,8 @@ function createMobileChars(level) {
                     level.push(new Coin(new Vector(x, y - 0.5)))
                     break
                 case "@":
-                    level.push(new Player(new Vector(x, y - 1), new Vector(2, 2)))
+                    console.log(new Vector(x, y - 1))
+                    level.push(new Player(new Vector(x, y - 1), new Vector(4, 4)))
             }
         }
 
@@ -166,9 +172,11 @@ function createMobileChars(level) {
 
 class Level {
     constructor(plan) {
+        this.plan = plan
+        
         let level = plan.trim().split("\n")
         .map(row => [...row].filter(block => block != " "))
-       
+        
         this.rows = level.length
         this.columns = level[0].length
         this.map = createMap(level)
@@ -186,13 +194,18 @@ class Level {
     get lava() {
         return this.actors.filter(actor => actor instanceof Lava)
     }
+
+    static getLevel(plan) {
+        return new this(plan)
+    }
 }
 
 export default class World {
-    constructor(levels) {
-        this.levels = levels
+    constructor(levels, levelObject = Level) {
+        this.levels = levels.map(level => levelObject.getLevel(level))
         this.gravity = 0.981
         this.currentLevel = 0
+        this.levelObject = levelObject
     }
 
     get level() {
@@ -201,10 +214,6 @@ export default class World {
 
     get lava() {
         return this.level.lava
-    }
-
-    static getLevel(plan) {
-        return new Level(plan)
     }
 
     isOutside(actor) {
@@ -220,6 +229,14 @@ export default class World {
     collisionsBlock(actor) {
         for (const block of this.level.map) {
             if (this.collisions(actor, block)) return true
+        }
+
+        return false
+    }
+
+    collisionsLava(actor) {
+        for (const lava of this.level.lava) {
+            if (this.collisions(actor, lava)) return true
         }
 
         return false
@@ -247,7 +264,8 @@ export default class World {
                 player.isFalling = true
                 player.jumpVelocity.y = 0
                 
-                if (this.isOutside(player)) player.position.y = 0
+                if (this.isOutside(player) ) player.position.y = 0
+                if (this.collisionsBlock(player)) player.position.y = Math.ceil(player.position.y)
             }
         }
         else if (player.isFalling) {
@@ -294,20 +312,28 @@ export default class World {
        
         for (const bubble of bubbles) {
             bubble.moveSideward(time)
+
+            if (this.collisionsBlock(bubble)) {
+                bubble.position.x = Math.round(bubble.position.x)
+                bubble.direction *= -1
+            }
         }
     }
 
     updateFallenLavas(time) {
-        const fallenLavas = this.lava.filter(lava => lava.sign === "|")
+        const fallenLavas = this.lava.filter(lava => lava.sign === "v")
         
         for (const fallenLava of fallenLavas) {
             fallenLava.fall(this.gravity, time, fallenLava.velocity)
-
-            if (this.isOutside(fallenLava) || this.collisionsBlock(fallenLava)) fallenLava.position = fallenLava.basePosition
+            
+            if (this.isOutside(fallenLava) || this.collisionsBlock(fallenLava)) {
+                fallenLava.position.y = fallenLava.basePosition.y
+                fallenLava.velocity.y = fallenLava.baseVelocity.y
+            }
         }
     }
 
-    anyLavahitsPlayer() {
+    anyLavaHitsPlayer() {
         for (const lava of this.lava) {
             let player = this.level.player
             
@@ -323,16 +349,22 @@ export default class World {
         this.updateLavaBubbles(time)
         this.updateFallenLavas(time)
 
-        return this.anyLavahitsPlayer()
+        return this.anyLavaHitsPlayer()
     }
 
     updateCoins(time) {
-        // check if player touches coin and then delete it
+        // check if player or lava touches coin and then delete it
         
         for (const coin of this.level.coins) {
             coin.wobble(time)
             
-            if (this.collisions(this.level.player, coin)) this.level.actors = this.level.actors.filter(actor => actor != coin)
+            if (this.collisionsBlock(coin)) {
+                coin.position.y = Math.round(coin.position.y)
+                coin.direction *= -1
+            }
+
+            if (this.collisions(this.level.player, coin) || 
+                this.collisionsLava(coin)) this.level.actors = this.level.actors.filter(actor => actor != coin)
         }
 
         if (this.level.coins.length <= 0) return true
@@ -342,9 +374,11 @@ export default class World {
 
     update(keys, time) {
         this.updatePlayer(keys, time)
-        
+        // console.log(this.level.player.position)
         const lose = this.updateLava(time),
         win  = this.updateCoins(time)
+        
+        if (lose || win) this.levels[this.currentLevel] = this.levelObject.getLevel(this.level.plan)
         
         if (lose) return false
         if (win) return true

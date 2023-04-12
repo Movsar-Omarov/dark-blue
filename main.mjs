@@ -6,39 +6,40 @@ import levelPlans from "./levels.js"
 const canvas = document.getElementById("display")
 let levels = levelPlans
 
-levels = levels.map(level => World.getLevel(level))
-
 const display = new Display(canvas),
 world = new World(levels),
 controller = new Controller(world, display)
 
 window.addEventListener("keydown", e => {
-    if (e.key in controller.keys) controller.keys[e.key] = true
+    controller.updateKey(e.key, true)
     e.preventDefault()
 })
 
-window.addEventListener("keyup", e => {
-    if (e.key in controller.keys) controller.keys[e.key] = false
+window.addEventListener("keyup", ({key}) => {
+    controller.updateKey(key, false)
 })
 
-function runMatch() {
+function gameOver() {
     return new Promise(resolve => {
-        controller.start()
-        resolve(controller.state)
+       setInterval(() => {
+            if (controller.state !== controller.isPlaying) resolve(controller.state)
+       }, 1)
     })
 }
 
 async function runGame() {
     while (true) {
         try {
-            result = await runMatch()
+            controller.start()
+            
+            let result = await gameOver()
+
+            if (result === "win") controller.nextLevel()
         }
         catch(e) {
             break
         }
-        console.log(result)
-        if (result === "win") controller.nextLevel()
-        else if (result === "lose") break
+        
     }
 }
 
