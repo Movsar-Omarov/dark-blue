@@ -30,13 +30,12 @@ export default class Controller {
 
     loop(time = 0) {
         if (this.state !== "playing") {
-            for (const key of Object.keys(this.keys)) {
-                this.keys[key] = false
-            }
+            
             return
         }
         
         let timeStep = this.timeStep(time)
+        this.lastTime = time
         // console.log(timeStep > 1000)
         let result = this.model.update(this.keys, timeStep)
         
@@ -44,8 +43,6 @@ export default class Controller {
         
         if (result == false) this.state = "lose"
         else if (result) this.state = "win"
-
-        this.lastTime = time
         
         requestAnimationFrame(time => this.loop(time))
     }
