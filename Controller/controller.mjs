@@ -15,7 +15,6 @@ export default class Controller {
     start() {
         console.log(this.model.currentLevel)
         this.state = "playing"
-        this.lastTime = 0
         this.view.render(this.model.level)
         requestAnimationFrame(time => this.loop(time))
     }
@@ -26,31 +25,29 @@ export default class Controller {
         if (key in this.keys && this.state === "playing") this.keys[key] = insert
     }
 
-    timeLoop(time) {
-        if (time - this.lastTime > 500) return 0
-        return  (time - this.lastTime) / 1000
-    } // in seconds
-
     loop(time = 0) {
         if (this.state !== "playing") return
         
-        let timeLoop = this.timeLoop(time) // in seconds
+        let timeLoop = time - this.lastTime
         
-        // console.log(timeLoop > 1000)
-        while(timeLoop >= this.timeStep / 1000) {
-            var result = this.model.update(this.keys, this.timeStep / 1000)
+        while(timeLoop >= this.timeStep) {
+            let result = this.model.update(this.keys, this.timeStep / 1000)
 
             this.lastTime += this.timeStep
-            timeLoop -= this.timeStep / 1000
+            timeLoop -= this.timeStep
+            
+            if (result !== undefined) {
+                if (result == false) this.state = "lose"
+                else if (result) this.state = "win"
+
+                break
+            }
         }
 
         const model2 = Object.create(this.model)
 
-        model2.update(this.keys, this.timeLoop(time))
+        model2.update(this.keys, (time - this.lastTime) / 1000)
         this.view.render(model2.level)
-        
-        if (result == false) this.state = "lose"
-        else if (result) this.state = "win"
         
         requestAnimationFrame(time => this.loop(time))
     }

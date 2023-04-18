@@ -341,8 +341,6 @@ export default class World {
 
             if (player.dead) return true
         }
-       
-        return false
     }
 
     updateLava(time) {
@@ -368,8 +366,6 @@ export default class World {
         }
 
         if (this.level.coins.length <= 0) return true
-
-        return false
     }
 
     update(keys, time) {
@@ -377,7 +373,7 @@ export default class World {
         // console.log(this.level.player.position)
         const lose = this.updateLava(time),
         win  = this.updateCoins(time)
-        
+       
         if (lose || win) this.levels[this.currentLevel] = this.levelObject.getLevel(this.level.plan)
         
         if (lose) return false
