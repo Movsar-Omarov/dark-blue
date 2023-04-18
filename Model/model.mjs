@@ -161,8 +161,7 @@ function createMobileChars(level) {
                     level.push(new Coin(new Vector(x, y - 0.5)))
                     break
                 case "@":
-                    console.log(new Vector(x, y - 1))
-                    level.push(new Player(new Vector(x, y - 1), new Vector(4, 4)))
+                    level.push(new Player(new Vector(x, y - 1), new Vector(4, 3)))
             }
         }
 
@@ -263,8 +262,9 @@ export default class World {
                 player.isJumping = false
                 player.isFalling = true
                 player.jumpVelocity.y = 0
-                
+            
                 if (this.isOutside(player) ) player.position.y = 0
+                
                 if (this.collisionsBlock(player)) player.position.y = Math.ceil(player.position.y)
             }
         }
