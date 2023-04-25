@@ -1,5 +1,5 @@
 import Controller from "./Controller/controller.mjs"
-import World from "./Model/model.mjs"
+import {World} from "./Model/model.mjs"
 import Display from "./View/view.mjs"
 import levelPlans from "./levels.js"
 

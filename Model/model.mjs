@@ -1,9 +1,13 @@
 import randomDirection from "../tools.mjs"
 
-class Vector {
+export class Vector {
     constructor(x, y) {
         this.x = x
         this.y = y
+    }
+
+    static createVec(x, y) {
+        return new Vector(x, y)
     }
 }
 
@@ -93,10 +97,10 @@ class Lava extends Actor {
 
 class Player extends Actor {
     constructor(position, velocity) {
-        super(position, velocity, new Vector(1, 2), "@", new RGB(0, 0, 255), 0)
+        super(position, Object.create(velocity), new Vector(1, 2), "@", new RGB(0, 0, 255), 0)
         this.isJumping = false
         this.isFalling = false
-        this.jumpVelocity = Object.create(this.velocity)
+        this.jumpVelocity = Object.create(velocity)
         this.health = 3
     }
 
@@ -199,7 +203,7 @@ class Level {
     }
 }
 
-export default class World {
+export class World {
     constructor(levels, levelObject = Level) {
         this.levels = levels.map(level => levelObject.getLevel(level))
         this.gravity = 0.981
@@ -261,9 +265,10 @@ export default class World {
             if (this.collisionsBlock(player) || this.isOutside(player) || player.jumpVelocity.y <= 0) {
                 player.isJumping = false
                 player.isFalling = true
-                player.jumpVelocity.y = 0
+
+                if (player.jumpVelocity <= 0) player.jumpVelocity.y = 0
             
-                if (this.isOutside(player) ) player.position.y = 0
+                if (this.isOutside(player)) player.position.y = 0
                 
                 if (this.collisionsBlock(player)) player.position.y = Math.ceil(player.position.y)
             }

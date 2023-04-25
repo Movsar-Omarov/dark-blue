@@ -13,7 +13,6 @@ export default class Controller {
     }
 
     start() {
-        console.log(this.model.currentLevel)
         this.state = "playing"
         this.view.render(this.model.level)
         requestAnimationFrame(time => this.loop(time))
@@ -21,7 +20,6 @@ export default class Controller {
 
     updateKey(key, insert) {
         if (typeof insert !== "boolean") throw new Error("InputError: insert parameter must contain only boolean values!")
-        // console.log(key in this.keys && this.state === "playing")
         if (key in this.keys && this.state === "playing") this.keys[key] = insert
     }
 
