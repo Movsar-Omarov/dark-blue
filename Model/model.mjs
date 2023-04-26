@@ -198,13 +198,17 @@ export class World {
     }
 
     isOutside(actor) {
-        return actor.position.x < 0 || actor.position.x + actor.size.x > this.level.columns ||
-            actor.position.y < 0 || actor.position.y + actor.size.y > this.level.rows
+        return actor.position.x < 0 || 
+            actor.position.x + actor.size.x > this.level.columns ||
+            actor.position.y < 0 || 
+            actor.position.y + actor.size.y > this.level.rows
     }
 
     collisions(actor, object) {
-        return actor.position.x < object.position.x + object.size.x && actor.position.x + actor.size.x > object.position.x &&
-                actor.position.y < object.position.y + object.size.y && actor.position.y + actor.size.y > object.position.y
+        return actor.position.x < object.position.x + object.size.x && 
+            actor.position.x + actor.size.x > object.position.x &&
+            actor.position.y < object.position.y + object.size.y && 
+            actor.position.y + actor.size.y > object.position.y
     }
 
     collisionsBlock(actor) {
@@ -353,7 +357,7 @@ export class World {
 
     update(keys, time) {
         this.updatePlayer(keys, time)
-        // console.log(this.level.player.position)
+        
         const lose = this.updateLava(time),
         win  = this.updateCoins(time)
        
