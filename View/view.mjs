@@ -1,4 +1,4 @@
-import {Vector} from "../Model/model.mjs"
+import {Vector} from "../math.mjs"
 
 class Viewport {
     constructor(player, width, height, unit, vecTool = Vector) {
